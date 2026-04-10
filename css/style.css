@@ -1,0 +1,685 @@
+/* =====================================================
+   自然系設計系統 — 體重紀錄小幫手
+   ===================================================== */
+
+/* ─── CSS 變數 ───────────────────────────────────── */
+:root {
+  /* 綠色系 */
+  --forest:    #1B4332;
+  --green:     #2D6A4F;
+  --green-mid: #40916C;
+  --sage:      #74C69D;
+  --mint:      #D8F3DC;
+
+  /* 棕色系 */
+  --brown:     #7B4F2E;
+  --earth:     #A67C52;
+  --sand:      #E9D8C3;
+
+  /* 中性 */
+  --cream:     #FAF7F2;
+  --white:     #FFFFFF;
+  --text:      #1C2C20;
+  --text-mid:  #4A6550;
+  --text-light:#7A9A80;
+  --border:    rgba(45,106,79,0.15);
+
+  /* 效果 */
+  --radius-sm: 12px;
+  --radius:    20px;
+  --radius-lg: 28px;
+  --shadow-sm: 0 2px 10px rgba(27,67,50,0.08);
+  --shadow:    0 6px 24px rgba(27,67,50,0.12);
+  --shadow-lg: 0 12px 40px rgba(27,67,50,0.18);
+
+  /* 動畫時長 */
+  --ease-out:  cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─── Reset ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+
+/* ─── App 容器 ───────────────────────────────────── */
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 100px;
+}
+
+/* =====================================================
+   標頭 — Hero 區塊（綠色背景 + 葉片裝飾）
+   ===================================================== */
+.date-header {
+  position: relative;
+  background: linear-gradient(135deg, var(--forest) 0%, var(--green) 60%, var(--green-mid) 100%);
+  padding: 52px 28px 40px;
+  overflow: hidden;
+  border-radius: 0 0 32px 32px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* 葉片裝飾 SVG */
+.leaf-deco {
+  position: absolute;
+  pointer-events: none;
+}
+.leaf-1 {
+  top: -30px; right: -20px;
+  width: 180px; opacity: 0.18;
+  animation: floatLeaf1 6s ease-in-out infinite;
+}
+.leaf-2 {
+  top: 20px; right: 80px;
+  width: 110px; opacity: 0.12;
+  animation: floatLeaf2 8s ease-in-out infinite;
+}
+.leaf-3 {
+  bottom: -20px; right: 10px;
+  width: 140px; opacity: 0.10;
+  animation: floatLeaf3 7s ease-in-out infinite;
+}
+
+@keyframes floatLeaf1 {
+  0%, 100% { transform: rotate(-8deg) translateY(0px); }
+  50%       { transform: rotate(-2deg) translateY(-10px); }
+}
+@keyframes floatLeaf2 {
+  0%, 100% { transform: rotate(5deg) translateY(0px); }
+  50%       { transform: rotate(12deg) translateY(-6px); }
+}
+@keyframes floatLeaf3 {
+  0%, 100% { transform: rotate(-12deg) translateY(0px); }
+  50%       { transform: rotate(-5deg) translateY(-8px); }
+}
+
+.date-text {
+  position: relative;
+  z-index: 1;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.date-sub {
+  position: relative;
+  z-index: 1;
+  font-size: 13px;
+  color: rgba(255,255,255,0.65);
+  margin-top: 4px;
+}
+
+/* ─── 主內容區塊 ─────────────────────────────────── */
+.main-content {
+  padding: 20px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ─── 卡片基礎 ───────────────────────────────────── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  /* 滾動動畫初始狀態 */
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.55s var(--ease-out),
+    transform 0.55s var(--ease-out),
+    box-shadow 0.3s ease;
+}
+.card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.card:hover {
+  box-shadow: var(--shadow);
+}
+
+/* 交錯延遲 */
+.card:nth-child(1) { transition-delay: 0.05s; }
+.card:nth-child(2) { transition-delay: 0.12s; }
+.card:nth-child(3) { transition-delay: 0.19s; }
+.card:nth-child(4) { transition-delay: 0.26s; }
+.card:nth-child(5) { transition-delay: 0.33s; }
+
+/* ─── 區塊標題（圖示 + 文字） ───────────────────── */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.section-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--mint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--green);
+}
+.section-icon svg { width: 18px; height: 18px; }
+.section-icon.brown-icon {
+  background: #F2E8DF;
+  color: var(--brown);
+}
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.2px;
+}
+
+/* ─── 體重輸入 ───────────────────────────────────── */
+.weight-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#weight-input {
+  flex: 1;
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--green);
+  border: 2.5px solid var(--mint);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -moz-appearance: textfield;
+  text-align: center;
+  background: var(--cream);
+  letter-spacing: -0.5px;
+}
+#weight-input::-webkit-outer-spin-button,
+#weight-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+#weight-input:focus {
+  border-color: var(--sage);
+  box-shadow: 0 0 0 4px rgba(116,198,157,0.2);
+}
+.unit {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+/* ─── 按鈕 ───────────────────────────────────────── */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--green), var(--green-mid));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 13px 22px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-spring), box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(45,106,79,0.35);
+  white-space: nowrap;
+}
+.btn-primary:active {
+  transform: scale(0.94);
+  box-shadow: 0 2px 6px rgba(45,106,79,0.25);
+}
+
+.btn-secondary {
+  position: relative;
+  overflow: hidden;
+  background: var(--mint);
+  color: var(--green);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-spring), background 0.2s;
+  margin-top: 12px;
+}
+.btn-secondary:active {
+  transform: scale(0.94);
+  background: #c5e8cf;
+}
+
+.btn-outline {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+  color: var(--text-light);
+  border: none;
+  border-radius: 12px;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-spring), background 0.2s, color 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+.btn-outline:active { transform: scale(0.92); }
+.btn-outline.tab-active {
+  color: var(--green);
+  background: var(--mint);
+}
+.btn-outline svg { width: 22px; height: 22px; flex-shrink: 0; }
+
+/* 漣漪效果 */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  transform: scale(0);
+  animation: ripple 0.55s linear;
+  pointer-events: none;
+}
+@keyframes ripple {
+  to { transform: scale(4); opacity: 0; }
+}
+
+.full-width { width: 100%; margin-top: 4px; }
+
+/* ─── Feedback ───────────────────────────────────── */
+.feedback {
+  font-size: 13px;
+  margin-top: 8px;
+  min-height: 18px;
+}
+.feedback.success { color: var(--green-mid); }
+.feedback.error   { color: #C0392B; }
+
+/* ─── 七日折線圖 ─────────────────────────────────── */
+.chart-wrapper {
+  position: relative;
+  height: 180px;
+}
+
+/* ─── 飲食 & 運動 textarea ───────────────────────── */
+#notes-input, #exercise-notes, #cal-notes-input, #cal-exercise-notes {
+  width: 100%;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+  resize: none;
+  outline: none;
+  background: var(--cream);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  line-height: 1.5;
+}
+#notes-input:focus, #exercise-notes:focus,
+#cal-notes-input:focus, #cal-exercise-notes:focus {
+  border-color: var(--sage);
+  box-shadow: 0 0 0 4px rgba(116,198,157,0.15);
+}
+
+/* ─── 運動勾選 ───────────────────────────────────── */
+.exercise-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.chip {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+.chip input[type="checkbox"] { display: none; }
+.chip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  font-size: 13px;
+  color: var(--text-mid);
+  font-weight: 500;
+  transition: all 0.2s var(--ease-spring);
+}
+.chip input:checked + span {
+  background: var(--mint);
+  border-color: var(--sage);
+  color: var(--green);
+  font-weight: 700;
+  transform: scale(1.04);
+}
+.chip.sm span {
+  padding: 6px 12px;
+  font-size: 15px;
+}
+
+/* ─── 體重對比 ───────────────────────────────────── */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.compare-card {
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  border: 1.5px solid var(--border);
+}
+.compare-card.today {
+  background: var(--mint);
+  border-color: var(--sage);
+}
+.compare-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+.compare-weight {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+.compare-card.today .compare-weight { color: var(--green); }
+.compare-notes {
+  font-size: 12px;
+  color: var(--text-light);
+  line-height: 1.4;
+  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.weight-diff {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 12px;
+  padding: 9px;
+  border-radius: 10px;
+}
+.weight-diff.up   { color: #C0392B; background: #FDECEA; }
+.weight-diff.down { color: var(--green); background: var(--mint); }
+.weight-diff.same { color: var(--text-light); background: var(--cream); }
+
+/* ─── 底部 Tab Bar ───────────────────────────────── */
+.bottom-actions {
+  display: flex;
+  gap: 0;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  padding: 8px 16px 24px;
+  background: var(--white);
+  box-shadow: 0 -1px 0 var(--border), 0 -4px 20px rgba(27,67,50,0.08);
+  z-index: 20;
+}
+
+/* =====================================================
+   Modal
+   ===================================================== */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+}
+.modal.hidden { display: none; }
+
+.modal-content {
+  background: var(--white);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 24px 20px 32px;
+  pointer-events: all;
+  animation: slideUpModal 0.35s var(--ease-out);
+}
+@keyframes slideUpModal {
+  from { transform: translateY(100%); opacity: 0.6; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.modal-header h3 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+.modal-close {
+  background: var(--cream);
+  border: none;
+  border-radius: 50%;
+  width: 34px; height: 34px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--text-light);
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, transform 0.15s;
+}
+.modal-close:active { transform: scale(0.88); }
+
+/* =====================================================
+   月曆
+   ===================================================== */
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.cal-arrow {
+  background: var(--mint);
+  border: none;
+  border-radius: 10px;
+  width: 38px; height: 38px;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, transform 0.15s var(--ease-spring);
+}
+.cal-arrow:active { transform: scale(0.88); background: var(--sage); color: #fff; }
+.cal-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin-bottom: 4px;
+}
+.cal-weekdays span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-light);
+  padding: 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-bottom: 16px;
+}
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s, transform 0.15s var(--ease-spring);
+  color: var(--text);
+}
+.cal-day:not(.empty):active { transform: scale(0.85); }
+.cal-day.empty { cursor: default; }
+.cal-day.today {
+  background: var(--mint);
+  color: var(--green);
+  font-weight: 800;
+}
+.cal-day.selected {
+  background: var(--green);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 3px 10px rgba(45,106,79,0.4);
+}
+.cal-day.selected .cal-dot { background: rgba(255,255,255,0.7); }
+.cal-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--sage);
+  position: absolute;
+  bottom: 4px;
+}
+.cal-day.today .cal-dot { background: var(--green); }
+
+/* ─── 月曆編輯面板 ───────────────────────────────── */
+.cal-edit-panel {
+  border-top: 1.5px solid var(--border);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fadeDown 0.3s var(--ease-out);
+}
+.cal-edit-panel.hidden { display: none; }
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cal-edit-date {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green);
+}
+.cal-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#cal-weight-input {
+  flex: 1;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--green);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  outline: none;
+  text-align: center;
+  background: var(--cream);
+  -moz-appearance: textfield;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+#cal-weight-input::-webkit-outer-spin-button,
+#cal-weight-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+#cal-weight-input:focus {
+  border-color: var(--sage);
+  box-shadow: 0 0 0 4px rgba(116,198,157,0.15);
+}
+.cal-exercise-row { display: flex; flex-direction: column; gap: 6px; }
+.cal-exercise-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.cal-exercise-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ─── 導出表單 ───────────────────────────────────── */
+.export-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.export-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.export-form input[type="date"] {
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--cream);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.export-form input[type="date"]:focus { border-color: var(--sage); }
+
+/* ─── 遮罩 ───────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27,67,50,0.45);
+  backdrop-filter: blur(3px);
+  z-index: 90;
+  animation: fadeOverlay 0.25s ease;
+}
+.overlay.hidden { display: none; }
+@keyframes fadeOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
