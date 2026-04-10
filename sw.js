@@ -2,15 +2,15 @@
  * sw.js — Service Worker（Cache First 策略）
  */
 
-const CACHE_NAME = 'weight-tracker-v2';
+const CACHE_NAME = 'weight-tracker-v7';
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
-  './js/db.js?v=2',
-  './js/chart-render.js?v=2',
-  './js/export.js?v=2',
-  './js/app.js?v=2',
+  './js/db.js?v=7',
+  './js/chart-render.js?v=7',
+  './js/export.js?v=7',
+  './js/app.js?v=7',
   './manifest.json',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
