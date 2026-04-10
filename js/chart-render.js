@@ -87,10 +87,17 @@ function renderWeightChart(records) {
           ticks: {
             font: { size: 11 },
             color: 'rgba(240,255,244,0.4)',
-            callback: v => `${v}kg`
+            callback: v => `${v}`
+          },
+          title: {
+            display: true,
+            text: 'kg',
+            color: 'rgba(240,255,244,0.35)',
+            font: { size: 10 }
           },
           suggestedMin: hasData ? undefined : 50,
           suggestedMax: hasData ? undefined : 80,
+          grace: '5%',
         }
       }
     }
