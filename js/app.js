@@ -45,16 +45,30 @@ async function init() {
 
 // ─── 體重對比 ─────────────────────────────────────────────
 
+function renderExerciseTags(elId, types) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '';
+  (types || []).forEach(t => {
+    const tag = document.createElement('span');
+    tag.className = 'compare-exercise-tag';
+    tag.textContent = t;
+    el.appendChild(tag);
+  });
+}
+
 async function refreshCompare() {
   const [yd, td] = await Promise.all([getRecord(yesterdayStr()), getRecord(todayStr())]);
 
   document.getElementById('yesterday-weight').textContent =
     yd?.weight != null ? `${yd.weight} kg` : '—';
-  document.getElementById('yesterday-notes').textContent  = yd?.notes || '暫無紀錄';
+  document.getElementById('yesterday-notes').textContent  = yd?.notes || '';
+  renderExerciseTags('yesterday-exercise', yd?.exerciseTypes);
 
   document.getElementById('today-weight').textContent =
     td?.weight != null ? `${td.weight} kg` : '—';
-  document.getElementById('today-notes').textContent  = td?.notes || '暫無紀錄';
+  document.getElementById('today-notes').textContent  = td?.notes || '';
+  renderExerciseTags('today-exercise', td?.exerciseTypes);
 
   const diffEl = document.getElementById('weight-diff');
   if (yd?.weight != null && td?.weight != null) {

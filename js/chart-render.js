@@ -54,9 +54,9 @@ function renderWeightChart(records) {
       datasets: [{
         label: '體重 (kg)',
         data,
-        borderColor: '#2D6A4F',
-        backgroundColor: 'rgba(45,106,79,0.10)',
-        pointBackgroundColor: '#40916C',
+        borderColor: '#4ADE80',
+        backgroundColor: 'rgba(74,222,128,0.08)',
+        pointBackgroundColor: '#4ADE80',
         pointRadius: 5,
         pointHoverRadius: 7,
         borderWidth: 2.5,
@@ -80,13 +80,13 @@ function renderWeightChart(records) {
       scales: {
         x: {
           grid: { display: false },
-          ticks: { font: { size: 11 }, color: '#7F8C8D' }
+          ticks: { font: { size: 11 }, color: 'rgba(240,255,244,0.4)' }
         },
         y: {
-          grid: { color: '#F0F3F7' },
+          grid: { color: 'rgba(255,255,255,0.06)' },
           ticks: {
             font: { size: 11 },
-            color: '#7F8C8D',
+            color: 'rgba(240,255,244,0.4)',
             callback: v => `${v}kg`
           },
           suggestedMin: hasData ? undefined : 50,
