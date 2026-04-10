@@ -12,15 +12,28 @@ function yesterdayStr() {
   return d.toISOString().slice(0, 10);
 }
 
+const MONTHS_EN = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const WEEKDAYS_EN = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+
 function formatDate(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日　${WEEKDAY_NAMES[d.getDay()]}`;
+  return `${d.getDate()} / ${MONTHS_EN[d.getMonth()]} / ${d.getFullYear()} / ${WEEKDAYS_EN[d.getDay()]}`;
+}
+
+// ─── 日期標頭渲染 ─────────────────────────────────────────
+
+function renderDateHeader(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  document.getElementById('date-day').textContent = d.getDate();
+  document.getElementById('date-month').textContent = MONTHS_EN[d.getMonth()];
+  document.getElementById('date-year').textContent = d.getFullYear();
+  document.getElementById('date-weekday').textContent = WEEKDAYS_EN[d.getDay()];
 }
 
 // ─── 初始化 ───────────────────────────────────────────────
 
 async function init() {
-  document.getElementById('today-date').textContent = formatDate(todayStr());
+  renderDateHeader(todayStr());
 
   const today = await getRecord(todayStr());
   if (today) {

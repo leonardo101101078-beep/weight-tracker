@@ -40,7 +40,15 @@
       <line x1="70" y1="6" x2="70" y2="210" stroke="white" stroke-width="1"/>
     </svg>
 
-    <div id="today-date" class="date-text"></div>
+    <div id="today-date" class="date-text">
+      <span class="date-day" id="date-day"></span>
+      <div class="date-mid-row">
+        <span class="date-month" id="date-month"></span>
+        <span class="date-sep">/</span>
+        <span class="date-year" id="date-year"></span>
+      </div>
+      <div class="date-weekday" id="date-weekday"></div>
+    </div>
     <div class="date-sub">體重紀錄小幫手</div>
   </header>
 
@@ -119,6 +127,7 @@
         <label class="chip"><input type="checkbox" value="游泳" /><span>🏊 游泳</span></label>
         <label class="chip"><input type="checkbox" value="瑜伽" /><span>🧘 瑜伽</span></label>
         <label class="chip"><input type="checkbox" value="騎車" /><span>🚴 騎車</span></label>
+        <label class="chip"><input type="checkbox" value="爬樓機" /><span>🏢 爬樓機</span></label>
         <label class="chip"><input type="checkbox" value="其他" /><span>✨ 其他</span></label>
       </div>
       <textarea id="exercise-notes" placeholder="運動筆記（時間、組數、距離…）" rows="3"></textarea>
@@ -221,6 +230,7 @@
           <label class="chip sm"><input type="checkbox" value="游泳" /><span>🏊</span></label>
           <label class="chip sm"><input type="checkbox" value="瑜伽" /><span>🧘</span></label>
           <label class="chip sm"><input type="checkbox" value="騎車" /><span>🚴</span></label>
+          <label class="chip sm"><input type="checkbox" value="爬樓機" /><span>🏢</span></label>
           <label class="chip sm"><input type="checkbox" value="其他" /><span>✨</span></label>
         </div>
         <textarea id="cal-exercise-notes" placeholder="運動筆記…" rows="2"></textarea>
@@ -261,9 +271,9 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <!-- 模組 -->
-<script src="js/db.js?v=5"></script>
-<script src="js/chart-render.js?v=5"></script>
-<script src="js/export.js?v=5"></script>
-<script src="js/app.js?v=5"></script>
+<script src="js/db.js?v=7"></script>
+<script src="js/chart-render.js?v=7"></script>
+<script src="js/export.js?v=7"></script>
+<script src="js/app.js?v=7"></script>
 </body>
 </html>
