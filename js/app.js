@@ -155,6 +155,7 @@ document.getElementById('save-exercise-btn').addEventListener('click', async () 
   const notes = document.getElementById('exercise-notes').value.trim();
   await saveRecord(todayStr(), undefined, undefined, types, notes);
   showFeedback('exercise-feedback', '運動紀錄已儲存 ✓');
+  await refreshCompare();
 });
 
 // ─── Modal 開關 ───────────────────────────────────────────
@@ -297,16 +298,16 @@ document.getElementById('cal-save-btn').addEventListener('click', async () => {
 
   showFeedback('cal-feedback', '已儲存 ✓');
 
-  // 若編輯的是今天，同步主頁面
+  // 無條件刷新主頁面圖表與對比（任何日期的體重變動都影響七日趨勢）
+  const recent = await getRecentRecords(7);
+  renderWeightChart(recent);
+  await refreshCompare();
+
+  // 若編輯的是今天，同步主頁面輸入欄位
   if (_calSelected === todayStr()) {
-    if (weight != null) {
-      document.getElementById('weight-input').value = weight;
-      const recent = await getRecentRecords(7);
-      renderWeightChart(recent);
-    }
+    if (weight != null) document.getElementById('weight-input').value = weight;
     document.getElementById('notes-input').value = notes;
     loadExerciseUI(exerciseTypes, exerciseNotes);
-    await refreshCompare();
   }
 });
 
