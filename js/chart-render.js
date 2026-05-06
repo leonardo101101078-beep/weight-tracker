@@ -87,7 +87,7 @@ function renderWeightChart(records) {
           ticks: {
             font: { size: 11 },
             color: 'rgba(240,255,244,0.4)',
-            callback: v => `${v}`
+            callback: v => parseFloat(v.toFixed(1))
           },
           title: {
             display: true,
