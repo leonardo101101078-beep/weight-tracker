@@ -6,6 +6,17 @@ let _chartInstance = null;
 
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
 
+function roundWeightValue(value) {
+  if (value == null || !Number.isFinite(Number(value))) return null;
+  return Math.round((Number(value) + Number.EPSILON) * 10) / 10;
+}
+
+function formatWeightValue(value) {
+  const rounded = roundWeightValue(value);
+  if (rounded == null) return '無資料';
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
 function formatChartDate(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
   return `${d.getMonth() + 1}/${d.getDate()}(${WEEKDAYS[d.getDay()]})`;
@@ -34,7 +45,7 @@ function renderWeightChart(records) {
 
   const days = getLast7Days();
   const recordMap = {};
-  records.forEach(r => { recordMap[r.date] = r.weight ?? null; });
+  records.forEach(r => { recordMap[r.date] = roundWeightValue(r.weight); });
 
   const labels  = days.map(formatChartDate);
   const data    = days.map(d => recordMap[d] ?? null);
@@ -73,7 +84,7 @@ function renderWeightChart(records) {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: ctx => ctx.parsed.y !== null ? `${ctx.parsed.y} kg` : '無資料'
+            label: ctx => ctx.parsed.y !== null ? `${formatWeightValue(ctx.parsed.y)} kg` : '無資料'
           }
         }
       },
@@ -87,7 +98,7 @@ function renderWeightChart(records) {
           ticks: {
             font: { size: 11 },
             color: 'rgba(240,255,244,0.4)',
-            callback: v => v.toFixed(1)
+            callback: v => formatWeightValue(v)
           },
           title: {
             display: true,
