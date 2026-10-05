@@ -1,5 +1,5 @@
 /* =====================================================
-   Dark Glassmorphism 設計系統 — 體重紀錄小幫手
+   Dark Glassmorphism 設計系統 — 自律有力貓
    ===================================================== */
 
 /* ─── CSS 變數 ───────────────────────────────────── */
@@ -10,17 +10,27 @@
   --bg-2:       #142B1E;
   --bg-3:       #1A3326;
 
-  /* 綠色強調 */
+  /* RGB 通道（給 rgba(var(--x-rgb), a) 用，配色切換只需覆寫這裡） */
+  --accent-rgb:  74,222,128;
+  --accent2-rgb: 22,163,74;
+  --bg-rgb:      10,26,16;
+  --success:     #4ADE80;
+  --success-rgb: 74,222,128;
+  --modal-bg:    rgba(15,34,24,0.92);
+  --input-bg:    rgba(255,255,255,0.05);
+  --scheme:      dark;
+
+  /* 主色（變數名沿用 green，淺色配色下為深綠） */
   --green:      #4ADE80;
   --green-dim:  #22C55E;
-  --green-glow: rgba(74,222,128,0.15);
+  --green-glow: rgba(var(--accent-rgb),0.15);
   --green-mid:  #16A34A;
 
   /* 玻璃卡片 */
   --glass-bg:   rgba(255,255,255,0.05);
   --glass-bg2:  rgba(255,255,255,0.08);
   --glass-border: rgba(255,255,255,0.10);
-  --glass-border-green: rgba(74,222,128,0.25);
+  --glass-border-green: rgba(var(--accent-rgb),0.25);
 
   /* 文字 */
   --text:       #F0FFF4;
@@ -32,10 +42,40 @@
   --radius:    20px;
   --radius-lg: 28px;
   --shadow-glass: 0 8px 32px rgba(0,0,0,0.4);
-  --shadow-green: 0 0 24px rgba(74,222,128,0.12);
+  --shadow-green: 0 0 24px rgba(var(--accent-rgb),0.12);
 
   --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─── 配色：海軍藍（html[data-theme="navy"]） ─────────── */
+/* 色票：#FFD716 黃（主色）、#0DA574 綠（輔色）、#073358 / #001F3E 藍（背景） */
+[data-theme="navy"] {
+  --bg-base:    #001F3E;
+  --bg-1:       #03284B;
+  --bg-2:       #052E52;
+  --bg-3:       #073358;
+
+  --accent-rgb:  255,215,22;
+  --accent2-rgb: 13,165,116;
+  --bg-rgb:      0,31,62;
+  --success:     #0DA574;
+  --success-rgb: 13,165,116;
+  --modal-bg:    rgba(7,51,88,0.95);
+
+  --green:      #FFD716;
+  --green-dim:  #0DA574;
+  --green-mid:  #0DA574;
+  --green-glow: rgba(255,215,22,0.14);
+
+  --glass-bg:   rgba(7,51,88,0.50);
+  --glass-bg2:  rgba(7,51,88,0.75);
+  --glass-border: rgba(255,255,255,0.10);
+  --glass-border-green: rgba(255,215,22,0.30);
+
+  --text:       #F5F8FF;
+  --text-mid:   rgba(245,248,255,0.72);
+  --text-light: rgba(245,248,255,0.45);
 }
 
 /* ─── Reset ─────────────────────────────────────── */
@@ -57,8 +97,8 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 50% at 80% 10%, rgba(74,222,128,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 10% 80%, rgba(22,163,74,0.06) 0%, transparent 60%);
+    radial-gradient(ellipse 60% 50% at 80% 10%, rgba(var(--accent-rgb),0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 10% 80%, rgba(var(--accent2-rgb),0.06) 0%, transparent 60%);
   pointer-events: none;
   z-index: 0;
 }
@@ -166,6 +206,7 @@ body::before {
 .card:nth-child(3) { transition-delay: 0.19s; }
 .card:nth-child(4) { transition-delay: 0.26s; }
 .card:nth-child(5) { transition-delay: 0.33s; }
+.card:nth-child(6) { transition-delay: 0.40s; }
 
 /* ─── 區塊標題 ───────────────────────────────────── */
 .section-header {
@@ -185,7 +226,7 @@ body::before {
 }
 .section-icon svg { width: 18px; height: 18px; }
 .section-icon.brown-icon {
-  background: rgba(255,255,255,0.06);
+  background: var(--glass-bg2);
   border-color: var(--glass-border);
   color: var(--text-mid);
 }
@@ -207,7 +248,7 @@ body::before {
   flex: 1;
   font-size: 40px;
   font-weight: 800;
-  color: #E8F0E8;
+  color: var(--text);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
@@ -215,7 +256,7 @@ body::before {
   transition: border-color 0.2s, box-shadow 0.2s;
   -moz-appearance: textfield;
   text-align: center;
-  background: rgba(255,255,255,0.05);
+  background: var(--input-bg);
   letter-spacing: -1px;
   caret-color: var(--green);
 }
@@ -223,7 +264,7 @@ body::before {
 #weight-input::-webkit-inner-spin-button { -webkit-appearance: none; }
 #weight-input:focus {
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(74,222,128,0.15), 0 0 20px rgba(74,222,128,0.08);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.15), 0 0 20px rgba(var(--accent-rgb),0.08);
 }
 #weight-input::placeholder { color: var(--text-light); }
 
@@ -238,7 +279,7 @@ body::before {
   position: relative;
   overflow: hidden;
   background: var(--green);
-  color: #0A1A10;
+  color: var(--bg-base);
   border: none;
   border-radius: var(--radius-sm);
   padding: 13px 22px;
@@ -246,12 +287,12 @@ body::before {
   font-weight: 800;
   cursor: pointer;
   transition: transform 0.15s var(--ease-spring), box-shadow 0.2s;
-  box-shadow: 0 4px 20px rgba(74,222,128,0.30);
+  box-shadow: 0 4px 20px rgba(var(--accent-rgb),0.30);
   white-space: nowrap;
 }
 .btn-primary:active {
   transform: scale(0.94);
-  box-shadow: 0 2px 8px rgba(74,222,128,0.20);
+  box-shadow: 0 2px 8px rgba(var(--accent-rgb),0.20);
 }
 
 .btn-secondary {
@@ -270,14 +311,14 @@ body::before {
 }
 .btn-secondary:active {
   transform: scale(0.94);
-  background: rgba(74,222,128,0.2);
+  background: rgba(var(--accent-rgb),0.2);
 }
 
 /* 漣漪 */
 .ripple {
   position: absolute;
   border-radius: 50%;
-  background: rgba(10,26,16,0.3);
+  background: rgba(var(--bg-rgb),0.3);
   transform: scale(0);
   animation: ripple 0.55s linear;
   pointer-events: none;
@@ -305,7 +346,7 @@ body::before {
   color: var(--text);
   resize: none;
   outline: none;
-  background: rgba(255,255,255,0.04);
+  background: var(--input-bg);
   transition: border-color 0.2s, box-shadow 0.2s;
   line-height: 1.5;
 }
@@ -314,7 +355,7 @@ body::before {
 #notes-input:focus, #exercise-notes:focus,
 #cal-notes-input:focus, #cal-exercise-notes:focus {
   border-color: var(--glass-border-green);
-  box-shadow: 0 0 0 3px rgba(74,222,128,0.08);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.08);
 }
 
 /* ─── 運動勾選 ───────────────────────────────────── */
@@ -338,7 +379,7 @@ body::before {
   color: var(--green);
   font-weight: 700;
   transform: scale(1.05);
-  box-shadow: 0 0 10px rgba(74,222,128,0.15);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb),0.15);
 }
 .chip.sm span { padding: 6px 11px; font-size: 15px; }
 
@@ -353,7 +394,7 @@ body::before {
 .compare-card.today {
   background: var(--green-glow);
   border-color: var(--glass-border-green);
-  box-shadow: 0 0 20px rgba(74,222,128,0.10);
+  box-shadow: 0 0 20px rgba(var(--accent-rgb),0.10);
 }
 .compare-label {
   font-size: 10px;
@@ -366,10 +407,10 @@ body::before {
 .compare-weight {
   font-size: 28px;
   font-weight: 800;
-  color: #E8F0E8;
+  color: var(--text);
   letter-spacing: -0.5px;
 }
-.compare-card.today .compare-weight { color: #E8F0E8; }
+.compare-card.today .compare-weight { color: var(--text); }
 .compare-notes {
   font-size: 12px;
   color: var(--text-light);
@@ -390,9 +431,9 @@ body::before {
   font-size: 11px;
   padding: 2px 7px;
   border-radius: 10px;
-  background: rgba(74,222,128,0.12);
+  background: rgba(var(--accent-rgb),0.12);
   color: var(--green);
-  border: 1px solid rgba(74,222,128,0.2);
+  border: 1px solid rgba(var(--accent-rgb),0.2);
 }
 .weight-diff {
   text-align: center;
@@ -403,7 +444,7 @@ body::before {
   border-radius: 10px;
 }
 .weight-diff.up   { color: #F87171; background: rgba(248,113,113,0.10); }
-.weight-diff.down { color: var(--green); background: var(--green-glow); }
+.weight-diff.down { color: var(--success); background: rgba(var(--success-rgb),0.12); }
 .weight-diff.same { color: var(--text-light); background: var(--glass-bg); }
 
 /* ─── 底部 Tab Bar ───────────────────────────────── */
@@ -417,7 +458,7 @@ body::before {
   width: 100%;
   max-width: 480px;
   padding: 8px 16px 24px;
-  background: rgba(10,26,16,0.85);
+  background: rgba(var(--bg-rgb),0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--glass-border);
@@ -460,7 +501,7 @@ body::before {
 .modal.hidden { display: none; }
 
 .modal-content {
-  background: rgba(15,34,24,0.92);
+  background: var(--modal-bg);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border-radius: 24px 24px 0 0;
@@ -540,11 +581,11 @@ body::before {
 }
 .cal-day.selected {
   background: var(--green);
-  color: #0A1A10;
+  color: var(--bg-base);
   font-weight: 800;
-  box-shadow: 0 3px 12px rgba(74,222,128,0.35);
+  box-shadow: 0 3px 12px rgba(var(--accent-rgb),0.35);
 }
-.cal-day.selected .cal-dot { background: rgba(10,26,16,0.5); }
+.cal-day.selected .cal-dot { background: rgba(var(--bg-rgb),0.5); }
 .cal-dot {
   width: 5px; height: 5px; border-radius: 50%;
   background: var(--green-dim);
@@ -568,11 +609,11 @@ body::before {
 .cal-edit-row { display: flex; align-items: center; gap: 8px; }
 #cal-weight-input {
   flex: 1;
-  font-size: 28px; font-weight: 800; color: #E8F0E8;
+  font-size: 28px; font-weight: 800; color: var(--text);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   padding: 10px 14px; outline: none; text-align: center;
-  background: rgba(255,255,255,0.05);
+  background: var(--input-bg);
   -moz-appearance: textfield;
   transition: border-color 0.2s, box-shadow 0.2s;
   caret-color: var(--green);
@@ -581,7 +622,7 @@ body::before {
 #cal-weight-input::-webkit-inner-spin-button { -webkit-appearance: none; }
 #cal-weight-input:focus {
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(74,222,128,0.12);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.12);
 }
 #cal-weight-input::placeholder { color: var(--text-light); }
 .cal-exercise-row { display: flex; flex-direction: column; gap: 6px; }
@@ -606,7 +647,7 @@ body::before {
   background: var(--glass-bg2);
   outline: none;
   transition: border-color 0.2s;
-  color-scheme: dark;
+  color-scheme: var(--scheme);
 }
 .export-form input[type="date"]:focus { border-color: var(--glass-border-green); }
 
@@ -620,3 +661,67 @@ body::before {
 }
 .overlay.hidden { display: none; }
 @keyframes fadeOverlay { from{opacity:0} to{opacity:1} }
+
+/* ─── 配色切換按鈕 ───────────────────────────────── */
+.theme-toggle {
+  position: absolute;
+  top: 20px; right: 20px;
+  z-index: 2;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-spring);
+}
+.theme-toggle:active { transform: scale(0.88); }
+/* 色塊預覽「切換後」的配色 */
+.theme-swatch {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: linear-gradient(135deg, #FFD716 50%, #073358 50%);
+}
+[data-theme="navy"] .theme-swatch {
+  background: linear-gradient(135deg, #4ADE80 50%, #0A1A10 50%);
+}
+
+/* ─── 連續戒糖日 ─────────────────────────────────── */
+.sugar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sugar-count {
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--green);
+  letter-spacing: -1px;
+}
+.sugar-total { font-size: 22px; font-weight: 700; color: var(--text-light); }
+.sugar-hint { font-size: 12px; color: var(--text-light); margin-top: 10px; }
+
+/* 飲食勾選的小字說明 */
+.chip-hint { font-size: 10px; font-weight: 400; opacity: 0.7; }
+
+/* 月曆：戒糖日底色 + 右上角 ✓（.today / .selected 規則在前，這裡只補底色，selected 再覆蓋） */
+.cal-day.sugar { background: rgba(var(--accent2-rgb),0.22); }
+.cal-day.sugar::after {
+  content: '✓';
+  position: absolute; top: 1px; right: 4px;
+  font-size: 9px; font-weight: 800;
+  color: var(--green);
+}
+.cal-day.today.sugar { background: rgba(var(--accent2-rgb),0.30); }
+.cal-day.selected.sugar { background: var(--green); }
+.cal-day.selected.sugar::after { color: var(--bg-base); }
+.cal-legend {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text-light);
+  margin: -8px 0 14px;
+}
+.cal-legend-swatch {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: rgba(var(--accent2-rgb),0.35);
+}

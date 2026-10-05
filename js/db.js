@@ -9,6 +9,11 @@ const STORE = 'records';
 
 let _db = null;
 
+/** 本地時區的 YYYY-MM-DD（toISOString 是 UTC，UTC+8 早上 8 點前會變成前一天） */
+function localDateStr(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function openDB() {
   if (_db) return Promise.resolve(_db);
   return new Promise((resolve, reject) => {
@@ -24,7 +29,13 @@ function openDB() {
   });
 }
 
-async function saveRecord(date, weight, notes, exerciseTypes, exerciseNotes) {
+/**
+ * Upsert：只更新 fields 內有傳入（!== undefined）的欄位，其餘保留
+ * @param {string} date YYYY-MM-DD
+ * @param {{weight?:number, notes?:string, foodTypes?:string[], sugarFree?:boolean,
+ *          exerciseTypes?:string[], exerciseNotes?:string}} fields
+ */
+async function saveRecord(date, fields) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite');
@@ -32,10 +43,7 @@ async function saveRecord(date, weight, notes, exerciseTypes, exerciseNotes) {
     const existing = store.get(date);
     existing.onsuccess = () => {
       const record = existing.result || { date };
-      if (weight        !== undefined) record.weight        = weight;
-      if (notes         !== undefined) record.notes         = notes;
-      if (exerciseTypes !== undefined) record.exerciseTypes = exerciseTypes;
-      if (exerciseNotes !== undefined) record.exerciseNotes = exerciseNotes;
+      Object.entries(fields).forEach(([k, v]) => { if (v !== undefined) record[k] = v; });
       const put = store.put(record);
       put.onsuccess = () => resolve(record);
       put.onerror   = e => reject(e.target.error);

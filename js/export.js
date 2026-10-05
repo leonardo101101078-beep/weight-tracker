@@ -20,12 +20,14 @@ async function exportToExcel(startDate, endDate) {
     return { ok: false, message: '該日期範圍內沒有任何紀錄' };
   }
 
-  const rows = [['日期', '星期', '體重 (kg)', '飲食紀錄', '運動項目', '運動筆記']];
+  const rows = [['日期', '星期', '體重 (kg)', '戒糖', '飲食項目', '飲食紀錄', '運動項目', '運動筆記']];
   records.forEach(r => {
     rows.push([
       r.date,
       getWeekday(r.date),
       r.weight != null ? r.weight : '',
+      r.sugarFree ? '✓' : '',
+      (r.foodTypes || []).join('、'),
       r.notes  || '',
       (r.exerciseTypes || []).join('、'),
       r.exerciseNotes  || ''
@@ -39,6 +41,8 @@ async function exportToExcel(startDate, endDate) {
     { wch: 12 },
     { wch: 10 },
     { wch: 12 },
+    { wch: 6 },
+    { wch: 28 },
     { wch: 36 },
     { wch: 20 },
     { wch: 30 }

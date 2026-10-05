@@ -1,11 +1,11 @@
 {
-  "name": "體重紀錄小幫手",
-  "short_name": "體重紀錄",
-  "description": "每日體重與飲食紀錄 PWA",
+  "name": "自律有力貓",
+  "short_name": "自律有力貓",
+  "description": "每日體重、戒糖、飲食與運動紀錄 PWA",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#2D6A4F",
-  "theme_color": "#2D6A4F",
+  "background_color": "#0A1A10",
+  "theme_color": "#0A1A10",
   "orientation": "portrait-primary",
   "icons": [
     {

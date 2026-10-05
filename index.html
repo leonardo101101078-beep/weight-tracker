@@ -3,11 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#2D6A4F" />
+  <meta name="theme-color" content="#0A1A10" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="體重紀錄" />
-  <title>體重紀錄小幫手</title>
+  <meta name="apple-mobile-web-app-title" content="自律有力貓" />
+  <title>自律有力貓</title>
+  <script>
+    // 提前套用配色，避免載入時閃一下預設配色
+    try { if (localStorage.getItem('theme') === 'navy') document.documentElement.dataset.theme = 'navy'; } catch (e) {}
+  </script>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
   <link rel="stylesheet" href="css/style.css" />
@@ -17,6 +21,9 @@
 
   <!-- ── 標頭 Hero ─────────────────────────────── -->
   <header class="date-header">
+    <button id="theme-toggle" class="theme-toggle" aria-label="切換配色" title="切換配色">
+      <span class="theme-swatch"></span>
+    </button>
     <!-- 葉片裝飾 SVG -->
     <svg class="leaf-deco leaf-1" viewBox="0 0 160 280" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M80 8 C115 40 145 110 130 185 C115 255 45 275 25 235 C5 195 18 110 48 62 C65 30 80 8 80 8Z" fill="white"/>
@@ -50,11 +57,29 @@
       </div>
       <div class="date-weekday" id="date-weekday"></div>
     </div>
-    <div class="date-sub">體重紀錄小幫手</div>
+    <div class="date-sub">自律有力貓</div>
   </header>
 
   <!-- ── 主內容 ────────────────────────────────── -->
   <div class="main-content">
+
+    <!-- 連續戒糖日 -->
+    <section class="card" id="sugar-section">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="5" width="14" height="14" rx="3"/>
+            <line x1="4" y1="20" x2="20" y2="4"/>
+          </svg>
+        </div>
+        <h2 class="section-title">連續戒糖日</h2>
+      </div>
+      <div class="sugar-row">
+        <div class="sugar-count"><span id="sugar-streak">0</span><span class="sugar-total"> 天</span></div>
+        <label class="chip"><input type="checkbox" id="sugar-yesterday" /><span>🚫🍬 昨日戒糖</span></label>
+      </div>
+      <div class="sugar-hint">每天早上勾選昨天，中斷即歸零</div>
+    </section>
 
     <!-- 今日體重 -->
     <section class="card" id="weight-section">
@@ -104,8 +129,9 @@
         </div>
         <h2 class="section-title">飲食紀錄</h2>
       </div>
+      <div class="exercise-chips" id="food-chips"></div>
       <textarea id="notes-input" placeholder="記錄今日飲食內容…" rows="4"></textarea>
-      <button id="save-notes-btn" class="btn-secondary">儲存筆記</button>
+      <button id="save-notes-btn" class="btn-secondary">儲存飲食</button>
       <div id="notes-feedback" class="feedback"></div>
     </section>
 
@@ -121,16 +147,7 @@
         </div>
         <h2 class="section-title">運動</h2>
       </div>
-      <div class="exercise-chips">
-        <label class="chip"><input type="checkbox" value="跑步" /><span>🏃 跑步</span></label>
-        <label class="chip"><input type="checkbox" value="健走" /><span>🚶 健走</span></label>
-        <label class="chip"><input type="checkbox" value="重訓" /><span>💪 重訓</span></label>
-        <label class="chip"><input type="checkbox" value="游泳" /><span>🏊 游泳</span></label>
-        <label class="chip"><input type="checkbox" value="瑜伽" /><span>🧘 瑜伽</span></label>
-        <label class="chip"><input type="checkbox" value="騎車" /><span>🚴 騎車</span></label>
-        <label class="chip"><input type="checkbox" value="爬樓機" /><span>🏢 爬樓機</span></label>
-        <label class="chip"><input type="checkbox" value="其他" /><span>✨ 其他</span></label>
-      </div>
+      <div class="exercise-chips" id="exercise-chips"></div>
       <textarea id="exercise-notes" placeholder="運動筆記（時間、組數、距離…）" rows="3"></textarea>
       <button id="save-exercise-btn" class="btn-secondary">儲存運動</button>
       <div id="exercise-feedback" class="feedback"></div>
@@ -152,12 +169,14 @@
         <div class="compare-card">
           <div class="compare-label">昨日</div>
           <div id="yesterday-weight" class="compare-weight">—</div>
+          <div id="yesterday-food" class="compare-exercise"></div>
           <div id="yesterday-notes" class="compare-notes"></div>
           <div id="yesterday-exercise" class="compare-exercise"></div>
         </div>
         <div class="compare-card today">
           <div class="compare-label">今日</div>
           <div id="today-weight" class="compare-weight">—</div>
+          <div id="today-food" class="compare-exercise"></div>
           <div id="today-notes" class="compare-notes"></div>
           <div id="today-exercise" class="compare-exercise"></div>
         </div>
@@ -214,6 +233,7 @@
       <span>四</span><span>五</span><span>六</span>
     </div>
     <div id="cal-grid" class="cal-grid"></div>
+    <div class="cal-legend"><span class="cal-legend-swatch"></span>戒糖日</div>
 
     <div id="cal-edit-panel" class="cal-edit-panel hidden">
       <div id="cal-edit-date" class="cal-edit-date"></div>
@@ -221,19 +241,15 @@
         <input type="number" id="cal-weight-input" placeholder="體重" step="0.1" min="20" max="300" />
         <span class="unit">kg</span>
       </div>
+      <label class="chip"><input type="checkbox" id="cal-sugar" /><span>🚫🍬 戒糖</span></label>
+      <div class="cal-exercise-row">
+        <div class="cal-exercise-label">飲食</div>
+        <div class="cal-exercise-chips" id="cal-food-chips"></div>
+      </div>
       <textarea id="cal-notes-input" placeholder="飲食紀錄…" rows="3"></textarea>
       <div class="cal-exercise-row">
         <div class="cal-exercise-label">運動</div>
-        <div class="cal-exercise-chips" id="cal-exercise-chips">
-          <label class="chip sm"><input type="checkbox" value="跑步" /><span>🏃</span></label>
-          <label class="chip sm"><input type="checkbox" value="健走" /><span>🚶</span></label>
-          <label class="chip sm"><input type="checkbox" value="重訓" /><span>💪</span></label>
-          <label class="chip sm"><input type="checkbox" value="游泳" /><span>🏊</span></label>
-          <label class="chip sm"><input type="checkbox" value="瑜伽" /><span>🧘</span></label>
-          <label class="chip sm"><input type="checkbox" value="騎車" /><span>🚴</span></label>
-          <label class="chip sm"><input type="checkbox" value="爬樓機" /><span>🏢</span></label>
-          <label class="chip sm"><input type="checkbox" value="其他" /><span>✨</span></label>
-        </div>
+        <div class="cal-exercise-chips" id="cal-exercise-chips"></div>
         <textarea id="cal-exercise-notes" placeholder="運動筆記…" rows="2"></textarea>
       </div>
       <button id="cal-save-btn" class="btn-primary full-width">儲存</button>
@@ -269,12 +285,12 @@
 
 <!-- CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/vendor/xlsx.full.min.js"></script>
 
 <!-- 模組 -->
-<script src="js/db.js?v=8"></script>
-<script src="js/chart-render.js?v=8"></script>
-<script src="js/export.js?v=8"></script>
-<script src="js/app.js?v=8"></script>
+<script src="js/db.js"></script>
+<script src="js/chart-render.js"></script>
+<script src="js/export.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

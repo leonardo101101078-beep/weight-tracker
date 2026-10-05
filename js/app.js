@@ -3,13 +3,119 @@
  */
 
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return localDateStr();
 }
 
 function yesterdayStr() {
   const d = new Date();
   d.setDate(d.getDate() - 1);
-  return d.toISOString().slice(0, 10);
+  return localDateStr(d);
+}
+
+// ─── 勾選項目設定（主頁與月曆共用） ───────────────────────
+
+const CHIP_OPTIONS = {
+  food: [
+    { value: '健康組合', icon: '🥦', hint: '西蘭花/雞胸肉/水煮蛋' },
+    { value: '高蛋白',   icon: '🥤' },
+    { value: '蘋果',     icon: '🍎' },
+    { value: '碳水',     icon: '🍚', hint: '飯/麵/麵包' },
+    { value: '海苔片',   icon: '🌿' },
+    { value: '垃圾食物', icon: '🍟', hint: '洋芋片' },
+    { value: '菜飯',     icon: '🍱' },
+  ],
+  exercise: [
+    { value: '重訓',   icon: '💪' },
+    { value: '爬樓機', icon: '🏢' },
+    { value: '游泳',   icon: '🏊' },
+  ],
+};
+
+function renderChips(containerId, options) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = options.map(o =>
+    `<label class="chip"><input type="checkbox" value="${o.value}" /><span>${o.icon} ${o.value}` +
+    (o.hint ? `<small class="chip-hint">${o.hint}</small>` : '') + '</span></label>'
+  ).join('');
+}
+
+function getCheckedValues(containerId) {
+  return [...document.querySelectorAll(`#${containerId} input:checked`)].map(cb => cb.value);
+}
+
+function setCheckedValues(containerId, values) {
+  document.querySelectorAll(`#${containerId} input`).forEach(cb => {
+    cb.checked = (values || []).includes(cb.value);
+  });
+}
+
+/** 保留舊紀錄中已不在選項內的值（例如改版前的「跑步」），避免儲存時被覆蓋掉 */
+function keepLegacyValues(oldValues, selected, options) {
+  const legacy = (oldValues || []).filter(v => !options.some(o => o.value === v));
+  return [...legacy, ...selected];
+}
+
+renderChips('food-chips', CHIP_OPTIONS.food);
+renderChips('exercise-chips', CHIP_OPTIONS.exercise);
+renderChips('cal-food-chips', CHIP_OPTIONS.food);
+renderChips('cal-exercise-chips', CHIP_OPTIONS.exercise);
+
+// ─── 配色切換 ─────────────────────────────────────────────
+
+const THEME_BG = { green: '#0A1A10', navy: '#001F3E' };
+
+function currentTheme() {
+  return document.documentElement.dataset.theme === 'navy' ? 'navy' : 'green';
+}
+
+function applyTheme(theme) {
+  if (theme === 'navy') document.documentElement.dataset.theme = 'navy';
+  else delete document.documentElement.dataset.theme;
+  document.querySelector('meta[name="theme-color"]').content = THEME_BG[theme];
+}
+
+document.getElementById('theme-toggle').addEventListener('click', async () => {
+  const next = currentTheme() === 'navy' ? 'green' : 'navy';
+  applyTheme(next);
+  try { localStorage.setItem('theme', next); } catch (e) {}
+  resetWeightChart();
+  renderWeightChart(await getLast7DaysRecords());
+});
+
+// ─── 連續戒糖日 ───────────────────────────────────────────
+// 每天早上量體重時勾「昨日戒糖」，所以計數以昨天為最新一天，今天不計入。
+
+/**
+ * 從昨天往回數連續戒糖天數（含週末），中斷即歸零。
+ * 昨天還沒勾不算中斷，從前天開始數。
+ */
+async function calcSugarStreak() {
+  const records = await getAllRecords();
+  const done = new Set(records.filter(r => r.sugarFree).map(r => r.date));
+
+  const now = new Date();
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  if (!done.has(localDateStr(d))) d.setDate(d.getDate() - 1);
+
+  let streak = 0;
+  while (done.has(localDateStr(d))) {
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+async function refreshSugar() {
+  const [streak, yd] = await Promise.all([calcSugarStreak(), getRecord(yesterdayStr())]);
+  document.getElementById('sugar-streak').textContent = streak;
+  document.getElementById('sugar-yesterday').checked = !!yd?.sugarFree;
+}
+
+/** 最近 7 天（含今天）的紀錄，給七日圖用 */
+function getLast7DaysRecords() {
+  const d = new Date();
+  d.setDate(d.getDate() - 6);
+  return getRecordsByRange(localDateStr(d), todayStr());
 }
 
 const MONTHS_EN = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
@@ -33,18 +139,21 @@ function renderDateHeader(dateStr) {
 // ─── 初始化 ───────────────────────────────────────────────
 
 async function init() {
+  applyTheme(currentTheme());
   renderDateHeader(todayStr());
 
   const today = await getRecord(todayStr());
   if (today) {
     if (today.weight != null) document.getElementById('weight-input').value = today.weight;
     if (today.notes)          document.getElementById('notes-input').value  = today.notes;
+    setCheckedValues('food-chips', today.foodTypes);
     loadExerciseUI(today.exerciseTypes || [], today.exerciseNotes || '');
   }
 
-  const recent = await getRecentRecords(7);
+  const recent = await getLast7DaysRecords();
   renderWeightChart(recent);
   await refreshCompare();
+  await refreshSugar();
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -76,11 +185,13 @@ async function refreshCompare() {
   document.getElementById('yesterday-weight').textContent =
     yd?.weight != null ? `${yd.weight} kg` : '—';
   document.getElementById('yesterday-notes').textContent  = yd?.notes || '';
+  renderExerciseTags('yesterday-food', yd?.foodTypes);
   renderExerciseTags('yesterday-exercise', yd?.exerciseTypes);
 
   document.getElementById('today-weight').textContent =
     td?.weight != null ? `${td.weight} kg` : '—';
   document.getElementById('today-notes').textContent  = td?.notes || '';
+  renderExerciseTags('today-food', td?.foodTypes);
   renderExerciseTags('today-exercise', td?.exerciseTypes);
 
   const diffEl = document.getElementById('weight-diff');
@@ -114,9 +225,7 @@ function showFeedback(elId, msg, type = 'success') {
 // ─── 運動 UI ─────────────────────────────────────────────
 
 function loadExerciseUI(types, notes) {
-  document.querySelectorAll('#exercise-section .chip input').forEach(cb => {
-    cb.checked = types.includes(cb.value);
-  });
+  setCheckedValues('exercise-chips', types);
   document.getElementById('exercise-notes').value = notes;
 }
 
@@ -129,9 +238,9 @@ document.getElementById('save-weight-btn').addEventListener('click', async () =>
     return;
   }
   const prevWeight = parseFloat(document.getElementById('today-weight').textContent) || val;
-  await saveRecord(todayStr(), val);
+  await saveRecord(todayStr(), { weight: val });
   showFeedback('weight-feedback', '體重已儲存 ✓');
-  const recent = await getRecentRecords(7);
+  const recent = await getLast7DaysRecords();
   renderWeightChart(recent);
   await refreshCompare();
   // 數字跳動動畫
@@ -139,11 +248,19 @@ document.getElementById('save-weight-btn').addEventListener('click', async () =>
   animateCounter(todayWeightEl, prevWeight, val, 'kg');
 });
 
+// ─── 昨日戒糖（勾選即存） ─────────────────────────────────
+
+document.getElementById('sugar-yesterday').addEventListener('change', async e => {
+  await saveRecord(yesterdayStr(), { sugarFree: e.target.checked });
+  await refreshSugar();
+});
+
 // ─── 儲存飲食 ─────────────────────────────────────────────
 
 document.getElementById('save-notes-btn').addEventListener('click', async () => {
-  const notes = document.getElementById('notes-input').value.trim();
-  await saveRecord(todayStr(), undefined, notes);
+  const notes     = document.getElementById('notes-input').value.trim();
+  const foodTypes = getCheckedValues('food-chips');
+  await saveRecord(todayStr(), { notes, foodTypes });
   showFeedback('notes-feedback', '飲食紀錄已儲存 ✓');
   await refreshCompare();
 });
@@ -151,9 +268,10 @@ document.getElementById('save-notes-btn').addEventListener('click', async () => 
 // ─── 儲存運動 ─────────────────────────────────────────────
 
 document.getElementById('save-exercise-btn').addEventListener('click', async () => {
-  const types = [...document.querySelectorAll('#exercise-section .chip input:checked')].map(cb => cb.value);
+  const old   = await getRecord(todayStr());
+  const types = keepLegacyValues(old?.exerciseTypes, getCheckedValues('exercise-chips'), CHIP_OPTIONS.exercise);
   const notes = document.getElementById('exercise-notes').value.trim();
-  await saveRecord(todayStr(), undefined, undefined, types, notes);
+  await saveRecord(todayStr(), { exerciseTypes: types, exerciseNotes: notes });
   showFeedback('exercise-feedback', '運動紀錄已儲存 ✓');
   await refreshCompare();
 });
@@ -223,6 +341,8 @@ async function renderCalendar() {
 
     cell.textContent = d;
 
+    if (_calRecordMap[dateStr]?.sugarFree) cell.classList.add('sugar');
+
     if (_calRecordMap[dateStr]) {
       const dot = document.createElement('div');
       dot.className = 'cal-dot';
@@ -247,11 +367,9 @@ async function selectCalDay(dateStr) {
   document.getElementById('cal-edit-date').textContent = formatDate(dateStr);
   document.getElementById('cal-weight-input').value = rec.weight != null ? rec.weight : '';
   document.getElementById('cal-notes-input').value  = rec.notes || '';
-
-  const types = rec.exerciseTypes || [];
-  document.querySelectorAll('#cal-exercise-chips input').forEach(cb => {
-    cb.checked = types.includes(cb.value);
-  });
+  document.getElementById('cal-sugar').checked = !!rec.sugarFree;
+  setCheckedValues('cal-food-chips', rec.foodTypes);
+  setCheckedValues('cal-exercise-chips', rec.exerciseTypes);
   document.getElementById('cal-exercise-notes').value = rec.exerciseNotes || '';
 
   document.getElementById('cal-feedback').textContent = '';
@@ -286,10 +404,13 @@ document.getElementById('cal-save-btn').addEventListener('click', async () => {
   }
 
   const notes         = document.getElementById('cal-notes-input').value.trim();
-  const exerciseTypes = [...document.querySelectorAll('#cal-exercise-chips input:checked')].map(cb => cb.value);
+  const sugarFree     = document.getElementById('cal-sugar').checked;
+  const foodTypes     = getCheckedValues('cal-food-chips');
+  const exerciseTypes = keepLegacyValues(_calRecordMap[_calSelected]?.exerciseTypes,
+                                         getCheckedValues('cal-exercise-chips'), CHIP_OPTIONS.exercise);
   const exerciseNotes = document.getElementById('cal-exercise-notes').value.trim();
 
-  await saveRecord(_calSelected, weight, notes, exerciseTypes, exerciseNotes);
+  await saveRecord(_calSelected, { weight, notes, sugarFree, foodTypes, exerciseTypes, exerciseNotes });
 
   // 更新快取並重繪
   const updated = await getRecord(_calSelected);
@@ -299,14 +420,16 @@ document.getElementById('cal-save-btn').addEventListener('click', async () => {
   showFeedback('cal-feedback', '已儲存 ✓');
 
   // 無條件刷新主頁面圖表與對比（任何日期的體重變動都影響七日趨勢）
-  const recent = await getRecentRecords(7);
+  const recent = await getLast7DaysRecords();
   renderWeightChart(recent);
   await refreshCompare();
+  await refreshSugar();
 
   // 若編輯的是今天，同步主頁面輸入欄位
   if (_calSelected === todayStr()) {
     if (weight != null) document.getElementById('weight-input').value = weight;
     document.getElementById('notes-input').value = notes;
+    setCheckedValues('food-chips', foodTypes);
     loadExerciseUI(exerciseTypes, exerciseNotes);
   }
 });
