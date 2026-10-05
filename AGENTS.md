@@ -206,3 +206,4 @@ CDN（Chart.js）：Cache First
 2. **IndexedDB Upsert**：`saveRecord` 採讀後寫模式，每個欄位獨立更新，傳 `undefined` 的欄位不會被覆寫。這是意圖設計，各儲存按鈕（戒糖/體重/飲食/運動）因此可以獨立運作。
 3. **無後端**：所有資料留在使用者裝置，沒有同步機制，換裝置時需透過 Excel 匯出備份。
 4. **語言**：UI 全部繁體中文，`lang="zh-TW"`。
+5. **部署**：GitHub Pages 從 `main` 分支 `/ (root)` 部署，push `main` 即上線（約 1 分鐘）。iOS 主畫面圖示由 `index.html` 的 `apple-touch-icon` 指定，勿移除，否則會抓到根網域（囤囤鼠）的圖示。
